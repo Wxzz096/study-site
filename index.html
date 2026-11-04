@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的学习库</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; background: #f4f4f9; margin: 0; padding: 15px; color: #333; }
+        h2 { margin-top: 0; }
+        .search-box { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; margin-bottom: 15px; font-size: 16px; }
+        .card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .card h3 { margin: 0 0 10px 0; font-size: 18px; color: #007bff; }
+        .tags { font-size: 12px; color: #666; margin-bottom: 10px; }
+        .tag { background: #e9ecef; padding: 3px 8px; border-radius: 5px; margin-right: 5px; }
+        .summary { font-size: 14px; color: #555; line-height: 1.5; }
+        .content { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ccc; font-size: 14px; }
+        .btn { background: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 5px; margin-top: 10px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <h2>📚 我的学习库</h2>
+    <input type="text" id="search" class="search-box" placeholder="输入关键词搜索...">
+    
+    <div id="list"></div>
+
+    <script>
+        let allData = [];
+
+        // 读取 data.json
+        fetch('data.json')
+            .then(res => res.json())
+            .then(data => {
+                allData = data;
+                render(allData);
+            })
+            .catch(err => {
+                document.getElementById('list').innerHTML = '<p style="color:red">数据加载失败，请检查 data.json 格式。</p>';
+            });
+
+        // 渲染列表
+        function render(data) {
+            const list = document.getElementById('list');
+            list.innerHTML = '';
+            if(data.length === 0) {
+                list.innerHTML = '<p>没有找到内容。</p>'; return;
+            }
+            data.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `
+                    <h3>${item.title}</h3>
+                    <div class="tags">${item.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+                    <div class="summary">${item.summary}</div>
+                    <div class="content" id="content-${item.id}">${item.content}</div>
+                    <button class="btn" onclick="toggle('${item.id}', this)">展开阅读</button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // 展开/收起内容
+        function toggle(id, btn) {
+            const content = document.getElementById(`content-${id}`);
+            if(content.style.display === 'block') {
+                content.style.display = 'none';
+                btn.innerText = '展开阅读';
+            } else {
+                content.style.display = 'block';
+                btn.innerText = '收起';
+            }
+        }
+
+        // 搜索功能
+        document.getElementById('search').addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            const filtered = allData.filter(item => 
+                item.title.toLowerCase().includes(val) || 
+                item.content.toLowerCase().includes(val) ||
+                item.tags.join(',').toLowerCase().includes(val)
+            );
+            render(filtered);
+        });
+    </script>
+</body>
+</html>
